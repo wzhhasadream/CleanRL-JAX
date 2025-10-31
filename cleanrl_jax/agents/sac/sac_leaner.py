@@ -91,8 +91,8 @@ class SACLearner:
 
 
         actor_rngs = nnx.Rngs(seed)
-        qf_rngs = nnx.Rngs(seed + 1)  
-        qf_target_rngs = nnx.Rngs(seed + 2)
+        q_rngs = nnx.Rngs(seed + 1)  
+        q_target_rngs = nnx.Rngs(seed + 2)
 
 
         self.actor = Actor(
@@ -103,16 +103,16 @@ class SACLearner:
         )
 
 
-        self.qf = DoubleCritic(
-            env, qf_rngs,
+        self.qnet = DoubleCritic(
+            env, q_rngs,
             hidden_dim=critic_hidden_dim,
             num_blocks=critic_num_blocks,
             block_type=critic_block_type
         )
 
 
-        self.qf_target = DoubleCritic(
-            env, qf_target_rngs,
+        self.qnet_target = DoubleCritic(
+            env, q_target_rngs,
             hidden_dim=critic_hidden_dim,
             num_blocks=critic_num_blocks,
             block_type=critic_block_type
@@ -127,10 +127,10 @@ class SACLearner:
             self.a_optimizer = None
 
 
-        nnx.update(self.qf_target, nnx.state(self.qf))
+        nnx.update(self.qnet_target, nnx.state(self.qnet))
 
 
-        self.qf_optimizer = nnx.Optimizer(self.qf, optax.adamw(q_lr,weight_decay=1e-2))  # Critic optimizer
+        self.q_optimizer = nnx.Optimizer(self.qnet, optax.adamw(q_lr,weight_decay=1e-2))  # Critic optimizer
         self.actor_optimizer = nnx.Optimizer(self.actor, optax.adamw(policy_lr,weight_decay=1e-2))  # Actor optimizer
 
 
@@ -165,18 +165,18 @@ class SACLearner:
         # Use uniform weights if no importance sampling weights provided
         if weights is None:
             info = update_sac(
-                self.actor, self.qf, self.qf_target, self.alpha, batch,
+                self.actor, self.qnet, self.qnet_target, self.alpha, batch,
                 key, self.target_entropy, self.a_optimizer, self.gamma,
-                self.tau, self.autotune, self.actor_optimizer, self.qf_optimizer,
+                self.tau, self.autotune, self.actor_optimizer, self.q_optimizer,
                 self.global_step % self.policy_frequency == 0,
                 self.global_step % self.target_network_frequency == 0,
                 self.policy_frequency
             )
         else:
             info = update_sac_with_weights(
-                self.actor, self.qf, self.qf_target, self.alpha, batch,
+                self.actor, self.qnet, self.qnet_target, self.alpha, batch,
                 key, weights, self.target_entropy, self.a_optimizer, self.gamma,
-                self.tau, self.autotune, self.actor_optimizer, self.qf_optimizer,
+                self.tau, self.autotune, self.actor_optimizer, self.q_optimizer,
                 self.global_step % self.policy_frequency == 0,
                 self.global_step % self.target_network_frequency == 0,
                 self.policy_frequency
