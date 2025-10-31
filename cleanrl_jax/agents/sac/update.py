@@ -95,7 +95,6 @@ def update_critic_with_weights(
         next_q1 = target_critic.critic1(batch["next_observations"], next_actions)
         next_q2 = target_critic.critic2(batch["next_observations"], next_actions)
 
-        # Take minimum to reduce overestimation bias (key insight from TD3/SAC)
         min_next_q = jnp.minimum(next_q1, next_q2)
 
         # SAC Bellman equation: Q_target = r + γ(1-done)(Q_min - α*log_π)

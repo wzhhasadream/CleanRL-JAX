@@ -15,10 +15,9 @@ tfb = tfp.bijectors
 # Network Constants
 ########################
 
-# Log standard deviation bounds for policy network
-# These bounds prevent the policy from becoming too deterministic or too stochastic
-LOG_STD_MIN = -5  # Minimum log std (std ≈ 0.007, quite deterministic)
-LOG_STD_MAX = 2   # Maximum log std (std ≈ 7.4, quite stochastic)
+
+LOG_STD_MIN = -5  
+LOG_STD_MAX = 2   
 
 
 
